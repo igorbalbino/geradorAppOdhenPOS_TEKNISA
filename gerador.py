@@ -7,18 +7,21 @@ import PySimpleGUI as sg
 from tqdm import tqdm
 from time import sleep
 from xml.dom import minidom
+import logging
 
-gpos700SitefConfig = './Projetos Build/SITEF/odhenPOS/config.xml'
-gpos700SitefScriptBat = './buildsitef.bat'
+gpos700SitefConfig = 'Projetos Build/SITEF/odhenPOS/config.xml'
+gpos700SitefScriptBat = r'buildsitef.bat'
 
-gpos700RedeConfig = './Projetos Build/REDE/odhenPOS/config.xml'
-gpos700RedeScriptBat = './buildrede.bat'
+gpos700RedeConfig = 'Projetos Build/REDE/odhenPOS/config.xml'
+gpos700RedeScriptBat = r'buildrede.bat'
 
-playStoreConfig = './Projetos Build/playstore/odhenPOS/config.xml'
-playStoreScriptBat = './buildplaystore.bat'
+playStoreConfig = 'Projetos Build/playstore/odhenPOS/config.xml'
+playStoreScriptBat = r'buildplaystore.bat'
 
-prodDir = './projeto/'
-prodDirOdhen = './projeto/odhenPOS/'
+prodDir = 'projeto/'
+prodDirOdhen = 'projeto/odhenPOS/'
+
+apkDir = 'Aplicativos/cordova/'
 
 class Util:
     def __init__(self):
@@ -43,14 +46,14 @@ class Util:
             sg.popup_error(f'XML ERROR!   ', e)
 
     def deleteDir(self, path):
-        print('conteudo de', path, f'deletado!{os.linesep}')
+        sg.Print('Conteudo de', path, f'deletado!{os.linesep}')
         try:
             shutil.rmtree(path)
         except Exception as e:
             sg.popup_error(f'DELETE DIR ERROR!   ', e)
 
     def createDir(self, path, permission):
-        print('diretorio ', path, f' criado!{os.linesep}')
+        sg.Print('Diretorio ', path, f' criado!{os.linesep}')
         try:
             os.mkdir(path, mode=permission)
         except Exception as e:
@@ -79,6 +82,31 @@ class Util:
             if '.' in dot:
                 qtdPontos = qtdPontos + 1
         return qtdPontos
+
+    def generatedMessage(self, cieloLio, gpos700Sitef, gpos700Rede, playStore):
+        #if cieloLio == True:
+            #apkDir = apkDir + ''
+        if gpos700Sitef == True:
+            aux = apkDir + 'sitef/'
+        if gpos700Rede == True:
+            aux = apkDir + 'rede/'
+        if playStore == True:
+            aux = apkDir + 'playstore/'
+        sg.Print(f'APK gerado!{os.linesep}'
+                 f'Verifique diretório: ', aux, 'para pegar arquivo APK.'
+                 f'{os.linesep}')
+
+    def getBatLog(self, func):
+        logger = logging.getLogger('mylogger')
+        logger.setLevel(logging.DEBUG)
+        #temos também:
+        #logging.INFO
+        handler = logging.FileHandler('genApkLog.log')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+        logger.info(func)
 #class Util
 
 class geradorDeApps:
@@ -105,7 +133,9 @@ class geradorDeApps:
         auxPath = prodDirOdhen + 'mobile/'
         self.util.deleteDir(prodDir)
         try:
-            sg.Print('copiando...')
+            sg.Print(f'Copiando diretorio:', self.mobileFolderPath, '; para:', auxPath, f';{os.linesep}'
+                     f'Aguarde...')
+            sleep(0.5)
             shutil.copytree(self.mobileFolderPath, auxPath)
             #self.util.barraDeCarregamentoDIR(self.mobileFolderPath, auxPath)
         except Exception as e:
@@ -121,25 +151,27 @@ class geradorDeApps:
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'version', self.version)
-                sb.call(gpos700SitefScriptBat)
+                self.util.getBatLog(sb.call([gpos700SitefScriptBat]))
             except Exception as e:
-                sg.popup_error('GENERATE APP ERROR!   ', e)
+                sg.popup_error('GENERATE SITEF APP ERROR!   ', e)
         if self.gpos700Rede == True:
             try:
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'version', self.version)
-                sb.call(gpos700RedeScriptBat)
+                self.util.getBatLog(sb.call([gpos700RedeScriptBat]))
             except Exception as e:
-                sg.popup_error('GENERATE APP ERROR!   ', e)
+                sg.popup_error('GENERATE REDE APP ERROR!   ', e)
         if self.playStore == True:
             try:
                 self.util.mudaXml(playStoreConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
                 self.util.mudaXml(playStoreConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(playStoreConfig, 'widget', 'version', self.version)
-                sb.call(playStoreScriptBat)
+                self.util.getBatLog(sb.call([playStoreScriptBat]))
             except Exception as e:
-                sg.popup_error('GENERATE APP ERROR!   ', e)
+                sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
+
+        self.util.generatedMessage(self.cieloLio, self.gpos700Sitef, self.gpos700Rede, self.playStore)
     #geraApp
 #class geradorDeApps
 
