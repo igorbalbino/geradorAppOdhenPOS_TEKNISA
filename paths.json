@@ -1,0 +1,21 @@
+{
+  "caminhos": {
+    "projetoCopy": "projeto/",
+    "projetoOdhenCopy": "projeto/odhenPOS/",
+    "apkDir": "Aplicativos/cordova/",
+    "config": {
+      "gpos700sitef": "Projetos Build/SITEF/odhenPOS/config.xml",
+      "gpos700Rede": "Projetos Build/REDE/odhenPOS/config.xml",
+      "playStore": "Projetos Build/playstore/odhenPOS/config.xml",
+      "pagSeguro": "Projetos Build/PAGSEGURO/odhenPOS/config.xml",
+      "getnet": "Projetos Build/GETNET/odhenPOS/config.xml"
+    },
+    "scriptBat": {
+      "gpos700sitef": "buildsitef.bat",
+      "gpos700Rede": "buildrede.bat",
+      "playStore": "buildplaystore.bat",
+      "pagSeguro": "buildpagseguro.bat",
+      "getnet": "buildgetnet.bat"
+    }
+  }
+}
