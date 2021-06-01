@@ -1,5 +1,5 @@
 # Directories #
-dist/
-build/
-__pycache__/
-.idea/
+dist/*
+build/*
+__pycache__/*
+.idea/*
