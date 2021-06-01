@@ -1,3 +1,5 @@
+# Directories #
 dist/
 build/
 __pycache__/
+.idea/

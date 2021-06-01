@@ -1,6 +1,7 @@
 #IMPORTA DEPENDENCIAS NECESSARIAS
 import os
 import subprocess as sb
+import json
 import traceback
 import shutil
 import PySimpleGUI as sg
@@ -17,6 +18,15 @@ gpos700RedeScriptBat = r'buildrede.bat'
 
 playStoreConfig = 'Projetos Build/playstore/odhenPOS/config.xml'
 playStoreScriptBat = r'buildplaystore.bat'
+
+pagSeguroConfig = 'Projetos Build/PAGSEGURO/odhenPOS/config.xml'
+pagSeguroScriptBat = r'buildpagseguro.bat'
+
+getnetConfig = 'Projetos Build/GETNET/odhenPOS/config.xml'
+getnetScriptBat = r'buildgetnet.bat'
+
+#cieloConfig = 'Projetos Build/LIO/odhenPOS/odhen-webview/config.xml'
+cieloScriptBat = r'buildlio.bat'
 
 prodDir = 'projeto/'
 prodDirOdhen = 'projeto/odhenPOS/'
@@ -75,6 +85,15 @@ class Util:
         nmr = int(strN)
         return nmr
 
+    def retornaJson(self, dataJson):
+        try:
+            emailInfo = open(dataJson)
+            wjson = emailInfo.read()
+            wjdata = json.loads(wjson)
+            return wjdata
+        except Exception as e:
+            sg.popup_error(f'JSON ERROR!', e)
+
     def contaPontosVersao(self, version):
         strV = str(version)
         qtdPontos = 0
@@ -84,8 +103,8 @@ class Util:
         return qtdPontos
 
     def generatedMessage(self, cieloLio, gpos700Sitef, gpos700Rede, playStore):
-        #if cieloLio == True:
-            #apkDir = apkDir + ''
+        if cieloLio == True:
+            aux = apkDir + 'cielo lio'
         if gpos700Sitef == True:
             aux = apkDir + 'sitef/'
         if gpos700Rede == True:
@@ -110,12 +129,14 @@ class Util:
 #class Util
 
 class geradorDeApps:
-    def __init__(self, cieloLio, gpos700Sitef, gpos700Rede, playStore, packageName, version, mobileFolderPath):
+    def __init__(self, cieloLio, gpos700Sitef, gpos700Rede, playStore, pagseguro, getnet, packageName, version, mobileFolderPath):
         self.util = Util()
         self.cieloLio = cieloLio
         self.gpos700Sitef = gpos700Sitef
         self.gpos700Rede = gpos700Rede
         self.playStore = playStore
+        self.pagseguro = pagseguro
+        self.getnet = getnet
         self.packageName = packageName
         self.version = version
         self.mobileFolderPath = mobileFolderPath + '/'
@@ -141,34 +162,65 @@ class geradorDeApps:
         except Exception as e:
             sg.popup_error('Erro na etapa de copiar diretório: ', e)
 
-        #if self.cieloLio == True:
-            #try:
-                #print('validiu')
-            #except Exception as e:
-                #sg.popup_error('GENERATE APP ERROR!   ', e)
+        if self.cieloLio == True:
+            try:
+                #self.util.mudaXml(cieloConfig, 'widget', 'android-versionCode',self.util.tiraPontoNmr(self.version))
+                #self.util.mudaXml(cieloConfig, 'widget', 'id', self.packageName)
+                #self.util.mudaXml(cieloConfig, 'widget', 'version', self.version)
+                sb.call([cieloScriptBat])
+            except Exception as e:
+                error = f'Script build error{os.linesep}' + e
+                self.util.getBatLog(error)
+                sg.popup_error('GENERATE LIO APP ERROR!   ', e)
         if self.gpos700Sitef == True:
             try:
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'version', self.version)
-                self.util.getBatLog(sb.call([gpos700SitefScriptBat]))
+                sb.call([gpos700SitefScriptBat])
             except Exception as e:
+                error = f'Script build error{os.linesep}' + e
+                self.util.getBatLog(error)
                 sg.popup_error('GENERATE SITEF APP ERROR!   ', e)
         if self.gpos700Rede == True:
             try:
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'version', self.version)
-                self.util.getBatLog(sb.call([gpos700RedeScriptBat]))
+                sb.call([gpos700RedeScriptBat])
             except Exception as e:
+                error = f'Script build error{os.linesep}' + e
+                self.util.getBatLog(error)
                 sg.popup_error('GENERATE REDE APP ERROR!   ', e)
         if self.playStore == True:
             try:
                 self.util.mudaXml(playStoreConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
                 self.util.mudaXml(playStoreConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(playStoreConfig, 'widget', 'version', self.version)
-                self.util.getBatLog(sb.call([playStoreScriptBat]))
+                sb.call([playStoreScriptBat])
             except Exception as e:
+                error = f'Script build error{os.linesep}' + e
+                self.util.getBatLog(error)
+                sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
+        if self.pagseguro == True:
+            try:
+                self.util.mudaXml(pagSeguroConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
+                self.util.mudaXml(pagSeguroConfig, 'widget', 'id', self.packageName)
+                self.util.mudaXml(pagSeguroConfig, 'widget', 'version', self.version)
+                sb.call([pagSeguroScriptBat])
+            except Exception as e:
+                error = f'Script build error{os.linesep}' + e
+                self.util.getBatLog(error)
+                sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
+        if self.getnet == True:
+            try:
+                self.util.mudaXml(getnetConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
+                self.util.mudaXml(getnetConfig, 'widget', 'id', self.packageName)
+                self.util.mudaXml(getnetConfig, 'widget', 'version', self.version)
+                sb.call([getnetScriptBat])
+            except Exception as e:
+                error = f'Script build error{os.linesep}' + e
+                self.util.getBatLog(error)
                 sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
 
         self.util.generatedMessage(self.cieloLio, self.gpos700Sitef, self.gpos700Rede, self.playStore)
@@ -190,6 +242,8 @@ class TelaPython:
             [sg.Checkbox('Gpos 700 - Sitef', default=False, key='gpos700Sitef')],
             [sg.Checkbox('Gpos 700 - Rede', default=False, key='gpos700Rede')],
             [sg.Checkbox('Play Store', default=False, key='playStore')],
+            [sg.Checkbox('PagSeguro', default=False, key='pagseguro')],
+            [sg.Checkbox('Getnet', default=False, key='getnet')],
             [sg.Text('Nome do pacote: ', size=(10, 0)),
              sg.Input(size=(30, 0), default_text='com.odhen.POS', key='packageName')],
             [sg.Text('Versão: ', size=(10, 0)), sg.Input(size=(30, 0), key='version')],
@@ -210,12 +264,14 @@ class TelaPython:
                 gpos700Sitef = self.values['gpos700Sitef']
                 gpos700Rede = self.values['gpos700Rede']
                 playStore = self.values['playStore']
+                pagseguro = self.values['pagseguro']
+                getnet = self.values['getnet']
                 packageName = self.values['packageName']
                 version = self.values['version']
                 mobileFolderPath = self.values['mobileFolderPath']
                 #progBar = self.values['progBar']
                 if self.event == 'generateAppBtn':
-                    if cieloLio or gpos700Sitef or gpos700Rede or playStore and packageName and version:
+                    if cieloLio or gpos700Sitef or gpos700Rede or playStore and packageName and pagseguro and getnet and version:
                         if mobileFolderPath == 'caminho...' or mobileFolderPath == '':
                             sg.popup_error(f'Selecione o caminho da "mobile/"!')
                         elif len(str(self.utilTela.tiraPontoNmr(version))) < 5 or len(str(self.utilTela.tiraPontoNmr(version))) >  10:
@@ -223,7 +279,7 @@ class TelaPython:
                         elif self.utilTela.contaPontosVersao(version) != 4:
                             sg.popup_error(f'ERRO: Digite a versão com pontos (.) !')
                         else:
-                            gerador = geradorDeApps(cieloLio, gpos700Sitef, gpos700Rede, playStore, packageName, version, mobileFolderPath)
+                            gerador = geradorDeApps(cieloLio, gpos700Sitef, gpos700Rede, playStore, pagseguro, getnet, packageName, version, mobileFolderPath)
                     else:
                         sg.popup_error(f'Algumas opções ou campos não foram preenchidos!')
                 #elif self.event == 'prodSelectBtn':
