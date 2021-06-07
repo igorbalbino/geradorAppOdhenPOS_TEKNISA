@@ -182,7 +182,7 @@ class Util:
               f'ext.set("APP_NAME", "Odhen POS"){os.linesep}' \
               f'ext.set("ASSETS_DIR", ["bower_components/assets", "bower_components/templates", "mobile"]){os.linesep}' \
               f'ext.set("WEBVIEW_URL", "mobile/index.html"){os.linesep}' \
-              f'ext.set("VERSION_CODE", {self.util.tiraPontoNmr(self.version)}){os.linesep}' \
+              f'ext.set("VERSION_CODE", {self.tiraPontoNmr(self.version)}){os.linesep}' \
               f'ext.set("VERSION_NAME", "{self.version}"){os.linesep}' \
               f'ext.set("APPLICATION_ID", "{self.packageName}"){os.linesep}' \
               f'ext.set("APP_ICON", "mobile/images/favicon.png"){os.linesep}' \
@@ -452,7 +452,12 @@ class TelaPython:
                              f'Para gerar um apk, selecione o caminho do diretótio "mobile/" que fica dentro do "odhenPOS/".{os.linesep}'
                              f'Após selecionar o caminho do diretório, marque as caixinhas dos apks que deseja gerar. '
                              f'Podem ser marcadas várias de uma vez...{os.linesep}'
-                             f'Depois de selecionar o caminho as caixinhas, clique no botão "Gerar" e o sistema irá iniciar o processo de geração.'
+                             f'Depois de selecionar o caminho as caixinhas, '
+                             f'digite o número da versão com pontos, como no exemplo: 7.0.0.0.0.{os.linesep}{os.linesep}'
+                             f'Não é necessário informar o pacote para gerar o apk. '
+                             f'Esse fica setado automaticamente de acordo com o padrão de cada projeto.{os.linesep}'
+                             f'Caso coloque o pacote, o sistema irá assumir esse pacote para todos os apks que forem gerados.{os.linesep}{os.linesep}'
+                             f'Clique no botão "Gerar" e o sistema irá iniciar o processo de geração.{os.linesep}{os.linesep}'
                              f'Caso ocorra algum erro, esse provavelmente aparecerá na tela. '
                              f'Também temos um log para registrar falhas: "genApkLog.log", que fica na "buildapk/".{os.linesep}{os.linesep}'
                              f'Agradecido com a preferência!{os.linesep}{os.linesep}'

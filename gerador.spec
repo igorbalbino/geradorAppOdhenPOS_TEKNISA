@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['gerador.py'],
-             pathex=['C:\\Users\\igorb\\PycharmProjects\\geradorAppOdhenPOS_TEKNISA'],
+             pathex=['C:\\Users\\igorb\\Documents\\GitHub\\geradorAppOdhenPOS_TEKNISA'],
              binaries=[],
              datas=[],
              hiddenimports=[],
