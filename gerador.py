@@ -1,8 +1,10 @@
 #IMPORTA DEPENDENCIAS NECESSARIAS
 import os
+from os.path import exists
 import subprocess as sb
 import json
 from jproperties import Properties
+from pathlib import Path
 import traceback
 import shutil
 import PySimpleGUI as sg
@@ -10,32 +12,46 @@ from tqdm import tqdm
 from time import sleep
 from xml.dom import minidom
 import logging
+#import asyncio
 
 #diretorios
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 #gpos 700 sitef
 gpos700SitefConfig = 'Projetos Build/SITEF/odhenPOS/config.xml'
-gpos700SitefScriptBat = r'buildsitef.bat'
+gpos700SitefScriptBat = ROOT_DIR + r'\\Scripts\\buildsitef.bat'
+gpos700SitefAPK = 'Aplicativos/cordova/sitef/odhenPOS-SITEF.apk'
+gpos700SitefAPKd = 'Aplicativos/cordova/sitef/odhenPOS-SITEF-debug.apk'
 
 #gpos 700 rede
 gpos700RedeConfig = 'Projetos Build/REDE/odhenPOS/config.xml'
-gpos700RedeScriptBat = r'buildrede.bat'
+gpos700RedeScriptBat = ROOT_DIR + r'\\Scripts\\buildrede.bat'
+gpos700RedeAPK = 'Aplicativos/cordova/rede/odhenPOS-REDE.apk'
+gpos700RedeAPKd = 'Aplicativos/cordova/rede/odhenPOS-REDE-debug.apk'
 
 #playstore
 playStoreConfig = 'Projetos Build/playstore/odhenPOS/config.xml'
-playStoreScriptBat = r'buildplaystore.bat'
+playStoreScriptBat = ROOT_DIR + r'\\Scripts\\buildplaystore.bat'
+playStoreAPK = 'Aplicativos/cordova/playstore/odhenPOS-playstore.apk'
+playStoreAPKd = 'Aplicativos/cordova/playstore/odhenPOS-playstore-debug.apk'
 
 #pagseguro
 pagSeguroConfig = 'Projetos Build/PAGSEGURO/odhenPOS/config.xml'
-pagSeguroScriptBat = r'buildpagseguro.bat'
+pagSeguroScriptBat = ROOT_DIR + r'\\Scripts\\buildpagseguro.bat'
+pagSeguroAPK = 'Aplicativos/cordova/pagseguro/odhenPOS-PAGSEGURO.apk'
+pagSeguroAPKd = 'Aplicativos/cordova/pagseguro/odhenPOS-PAGSEGURO-debug.apk'
 
 #getnet
 getnetConfig = 'Projetos Build/GETNET/odhenPOS/config.xml'
-getnetScriptBat = r'buildgetnet.bat'
+getnetScriptBat = ROOT_DIR + r'\\Scripts\\buildgetnet.bat'
+getnetAPK = 'Aplicativos/cordova/getnet/odhenPOS-GETNET.apk'
+getnetAPKd = 'Aplicativos/cordova/getnet/odhenPOS-GETNET-debug.apk'
 
 #cielo
 #cieloConfig = 'Projetos Build/LIO/odhenPOS/build.properties'
 cieloPropDir = 'Projetos Build/LIO/odhenPOS/'
-cieloScriptBat = r'buildlio.bat'
+cieloScriptBat = ROOT_DIR + r'/Scripts/buildlio.bat'
+cieloAPK = 'Aplicativos/lio/'
 
 #diretorios build e copia
 prodDir = 'projeto/'
@@ -54,6 +70,7 @@ class Util:
             return True
         else:
             return False
+    #dirIsEmpty
 
     #altera valores das tags passadas para a funcao
     def mudaXml(self, path, tag, attr, value):
@@ -67,6 +84,7 @@ class Util:
                 xmldoc.writexml(f, indent='', encoding="utf-8")
         except Exception as e:
             sg.popup_error(f'XML ERROR!   ', e)
+    #mudaXml
 
     def deleteDir(self, path):
         sg.Print('Conteudo de', path, f'deletado!{os.linesep}')
@@ -74,6 +92,7 @@ class Util:
             shutil.rmtree(path)
         except Exception as e:
             sg.popup_error(f'DELETE DIR ERROR!   ', e)
+    #deleteDir
 
     def createDir(self, path, permission):
         sg.Print('Diretorio ', path, f' criado!{os.linesep}')
@@ -81,6 +100,7 @@ class Util:
             os.mkdir(path, mode=permission)
         except Exception as e:
             sg.popup_error(f'CREATE DIR ERROR!   ', e)
+    #createDir
 
     #renderiza a barra de carregamento. funciona apenas em desenvolvimento
     def barraDeCarregamentoDIR(self, path, pathAux):
@@ -93,12 +113,14 @@ class Util:
                     #sg.Print(tqdm(range(qtd)))
                     qtd = qtd - 1
                     sleep(0.01)
+    #barraDeCarregamentoDIR
 
     #retira pontos de numeros com ponto
     def tiraPontoNmr(self, nmr):
         strN = str(nmr).replace('.', '')
         nmr = int(strN)
         return nmr
+    #tiraPontoNmr
 
     #abre json e coloca as informaçoes em variavel
     def retornaJson(self, dataJson):
@@ -109,6 +131,7 @@ class Util:
             return wjdata
         except Exception as e:
             sg.popup_error(f'JSON ERROR!', e)
+    #retornaJson
 
     def contaPontosVersao(self, version):
         strV = str(version)
@@ -117,31 +140,28 @@ class Util:
             if '.' in dot:
                 qtdPontos = qtdPontos + 1
         return qtdPontos
+    #contaPontosVersao
 
     #ao final do build, gera uma mensagem
-    def generatedMessage(self, cieloLio, cieloLio_teste, gpos700Sitef, gpos700Rede, gpos700Rede_giraffas,
-                                   gpos700Rede_react_saas, playStore, pagseguro, getnet):
-        if cieloLio == True:
-            aux = apkDir + 'cielo lio'
-        if cieloLio_teste == True:
-            aux = apkDir + 'cielo lio teste'
-        if gpos700Sitef == True:
-            aux = apkDir + 'sitef'
-        if gpos700Rede == True:
-            aux = apkDir + 'rede'
-        if gpos700Rede_giraffas == True:
-            aux = apkDir + 'rede giraffas'
-        if gpos700Rede_react_saas == True:
-            aux = apkDir + 'rede saas'
-        if playStore == True:
-            aux = apkDir + 'playstore'
-        if pagseguro == True:
-            aux = apkDir + 'pagseguro'
-        if getnet == True:
-            aux = apkDir + 'getnet'
+    def generatedMessage(self, txt):
+        if txt == 'sitef':
+            aux = 'sitef'
+        if txt == 'rede':
+            aux = 'rede'
+        if txt == 'rede giraffas':
+            aux = 'rede giraffas'
+        if txt == 'rede saas':
+            aux = 'rede saas'
+        if txt == 'playstore':
+            aux = 'playstore'
+        if txt == 'pagseguro':
+            aux = 'pagseguro'
+        if txt == 'getnet':
+            aux = 'getnet'
         sg.Print(f'APK gerado!{os.linesep}'
-                 f'Verifique diretóriode build. Apk: ', aux, 'gerado!.'
+                 f'Verifique diretório de build. Apk: ', aux, ' gerado!.'
                  f'{os.linesep}')
+    #generatedMessage
 
     #pega o log do argumento passado
     def getBatLog(self, e):
@@ -153,8 +173,8 @@ class Util:
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-
         logger.info(e)
+    #getBatLog
 
     #pega dados de arquivo ".properties" e coloca em variavel
     def parseDotProperties(self, dotPropPath):
@@ -162,6 +182,7 @@ class Util:
         with open(dotPropPath, "rb") as f:
             p.load(f, "utf-8")
             return p
+    #parseDotProperties
 
     #altera arquivos ".properties"
     def changeDotProperties(self, dotPropPath, prop, value):
@@ -169,22 +190,24 @@ class Util:
         p[prop] = value
         with open(dotPropPath, "w") as f:
             p.store(f, encoding="utf-8")
+    #changeDotProperties
 
     #cria arquivo ".txt"
     def createTXTFile(self, filePath, txt):
         with open(filePath, "w") as f:
             f.write(txt)
+    #createTXTFileAPK gerado!
 
     #cria ".txt", deleta ".properties" e altera para ".txt" para ""
-    def treatDotProperties(self):
+    def treatDotProperties(self, version, packageName):
         # conteudo a ser posto no arquivo ".properties"
-        txt = f'ext.set("APK_NAME", "odhenPOS"){os.linesep}' \
+        content = f'ext.set("APK_NAME", "odhenPOS"){os.linesep}' \
               f'ext.set("APP_NAME", "Odhen POS"){os.linesep}' \
               f'ext.set("ASSETS_DIR", ["bower_components/assets", "bower_components/templates", "mobile"]){os.linesep}' \
               f'ext.set("WEBVIEW_URL", "mobile/index.html"){os.linesep}' \
-              f'ext.set("VERSION_CODE", {self.tiraPontoNmr(self.version)}){os.linesep}' \
-              f'ext.set("VERSION_NAME", "{self.version}"){os.linesep}' \
-              f'ext.set("APPLICATION_ID", "{self.packageName}"){os.linesep}' \
+              f'ext.set("VERSION_CODE", {self.tiraPontoNmr(version)}){os.linesep}' \
+              f'ext.set("VERSION_NAME", "{version}"){os.linesep}' \
+              f'ext.set("APPLICATION_ID", "{packageName}"){os.linesep}' \
               f'ext.set("APP_ICON", "mobile/images/favicon.png"){os.linesep}' \
               f'ext.set("STORE_FILE", "playStoreKey"){os.linesep}' \
               f'ext.set("STORE_PASSWORD", "teknisa"){os.linesep}' \
@@ -193,20 +216,35 @@ class Util:
         try:
             # trata ".properties"
             auxPath = cieloPropDir + 'build.txt'
-            self.util.createTXTFile(auxPath, txt)
-            # deleta arquivo
-            os.remove(cieloPropDir + 'build.properties')
-            # remove extensão ".txt" para mudar para ".properties"
-            base = os.path.splitext(auxPath)[0]
-            # adiciona extensao
-            os.rename(auxPath, base + ".properties")
+            if exists(auxPath):
+                os.remove(auxPath)
+            #cria txt
+            self.createTXTFile(auxPath, content)
+            if exists(cieloPropDir + 'build.properties'):
+                #deleta arquivo
+                os.remove(cieloPropDir + 'build.properties')
+            p = Path(auxPath)
+            #renomeia através da lib Path
+            p.rename(p.with_suffix('.properties'))
         except Exception as e:
-            self.util.getBatLog(e)
+            self.getBatLog(e)
             sg.popup_error('treatDotProperties ERROR: ', e)
+    #treatDotProperties
+
+    #verifica se o arquivo existe
+    def verifyFile(self, path):
+        if exists(path):
+            return True
+        elif exists(path) == False:
+            return False
+        else:
+            return 'Aconteceu um erro aqui! func: verifyFile'
+    #verifyFile
 #class Util
 
 class geradorDeApps:
-    def __init__(self, cieloLio, cieloLio_teste, gpos700Sitef, gpos700Rede, gpos700Rede_giraffas, gpos700Rede_react_saas, playStore, pagseguro, getnet, packageName, version, mobileFolderPath):
+    def __init__(self, cieloLio, cieloLio_teste, gpos700Sitef, gpos700Rede, gpos700Rede_giraffas, gpos700Rede_react_saas, playStore,
+                 pagseguro, getnet, packageName, version, mobileFolderPath):
         self.util = Util()
         self.cieloLio = cieloLio
         self.cieloLio_teste = cieloLio_teste
@@ -237,9 +275,7 @@ class geradorDeApps:
         auxPath = prodDirOdhen + 'mobile/'
         self.util.deleteDir(prodDir)
         try:
-            sg.Print(f'Copiando diretorio:', self.mobileFolderPath, '; para:', auxPath, f';{os.linesep}'
-                     f'Aguarde...')
-            sleep(0.5)
+            sg.Print(f'Copiando. Aguarde...')
             #copia arquivos de "self.mobileFolderPath" para "auxPath"
             shutil.copytree(self.mobileFolderPath, auxPath)
         except Exception as e:
@@ -255,9 +291,13 @@ class geradorDeApps:
                 self.packageName = 'com.odhen.POS'
             try:
                 #trata ".properties"
-                self.util.treatDotProperties()
+                self.util.treatDotProperties(self.version, self.packageName)
                 #chama ".bat"
                 sb.call([cieloScriptBat])
+                if self.util.dirIsEmpty(cieloAPK):
+                    sg.Print('Ocorreu um erro!!    APKs cielo não gerados.')
+                elif self.util.dirIsEmpty(cieloAPK) == False:
+                    sg.Print('APKs cielo gerados!!.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE LIO APP ERROR!   ', e)
@@ -268,8 +308,12 @@ class geradorDeApps:
                 self.packageName = 'com.odhen.waiterEnterprise'
             try:
                 # trata ".properties"
-                self.util.treatDotProperties()
+                self.util.treatDotProperties(self.version, self.packageName)
                 sb.call([cieloScriptBat])
+                if self.util.dirIsEmpty(cieloAPK):
+                    sg.Print('Ocorreu um erro!!       APKs cielo teste não gerados.')
+                elif self.util.dirIsEmpty(cieloAPK) == False:
+                    sg.Print('APKs cielo teste gerados!!')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE LIO TESTE APP ERROR!   ', e)
@@ -284,6 +328,13 @@ class geradorDeApps:
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(gpos700SitefConfig, 'widget', 'version', self.version)
                 sb.call([gpos700SitefScriptBat])
+                if self.util.verifyFile(gpos700SitefAPK) and self.util.verifyFile(gpos700SitefAPKd):
+                    # gera mensagem ao final do build
+                    self.util.generatedMessage('sitef')
+                elif self.util.verifyFile(gpos700SitefAPK) or self.util.verifyFile(gpos700SitefAPKd):
+                    sg.Print('Apenas 1 apk foi gerado')
+                else:
+                    sg.Print('Nenhum apk foi gerado.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE SITEF APP ERROR!   ', e)
@@ -298,6 +349,13 @@ class geradorDeApps:
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'version', self.version)
                 sb.call([gpos700RedeScriptBat])
+                if self.util.verifyFile(gpos700RedeAPK) and self.util.verifyFile(gpos700RedeAPKd):
+                    # gera mensagem ao final do build
+                    self.util.generatedMessage('rede')
+                elif self.util.verifyFile(gpos700RedeAPK) or self.util.verifyFile(gpos700RedeAPKd):
+                    sg.Print('Apenas 1 apk foi gerado')
+                else:
+                    sg.Print('Nenhum apk foi gerado.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE REDE APP ERROR!   ', e)
@@ -312,6 +370,13 @@ class geradorDeApps:
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'id', 'com.odhen.POSat')
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'version', self.version)
                 sb.call([gpos700RedeScriptBat])
+                if self.util.verifyFile(gpos700RedeAPK) and self.util.verifyFile(gpos700RedeAPKd):
+                    # gera mensagem ao final do build
+                    self.util.generatedMessage('rede giraffas')
+                elif self.util.verifyFile(gpos700RedeAPK) or self.util.verifyFile(gpos700RedeAPKd):
+                    sg.Print('Apenas 1 apk foi gerado')
+                else:
+                    sg.Print('Nenhum apk foi gerado.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE REDE APP ERROR!   ', e)
@@ -326,6 +391,13 @@ class geradorDeApps:
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'id', 'com.odhenpos')
                 self.util.mudaXml(gpos700RedeConfig, 'widget', 'version', self.version)
                 sb.call([gpos700RedeScriptBat])
+                if self.util.verifyFile(gpos700RedeAPK) and self.util.verifyFile(gpos700RedeAPKd):
+                    # gera mensagem ao final do build
+                    self.util.generatedMessage('rede saas')
+                elif self.util.verifyFile(gpos700RedeAPK) or self.util.verifyFile(gpos700RedeAPKd):
+                    sg.Print('Apenas 1 apk foi gerado')
+                else:
+                    sg.Print('Nenhum apk foi gerado.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE REDE APP ERROR!   ', e)
@@ -340,6 +412,13 @@ class geradorDeApps:
                 self.util.mudaXml(playStoreConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(playStoreConfig, 'widget', 'version', self.version)
                 sb.call([playStoreScriptBat])
+                if self.util.verifyFile(playStoreAPK) and self.util.verifyFile(playStoreAPKd):
+                    #gera mensagem ao final do build
+                    self.util.generatedMessage('playstore')
+                elif self.util.verifyFile(playStoreAPK) or self.util.verifyFile(playStoreAPKd):
+                    sg.Print('Apenas 1 apk foi gerado')
+                else:
+                    sg.Print('Nenhum apk foi gerado.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
@@ -354,6 +433,13 @@ class geradorDeApps:
                 self.util.mudaXml(pagSeguroConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(pagSeguroConfig, 'widget', 'version', self.version)
                 sb.call([pagSeguroScriptBat])
+                if self.util.verifyFile(pagSeguroAPK) and self.util.verifyFile(pagSeguroAPKd):
+                    # gera mensagem ao final do build
+                    self.util.generatedMessage('pagseguro')
+                elif self.util.verifyFile(pagSeguroAPK) or self.util.verifyFile(pagSeguroAPKd):
+                    sg.Print('Apenas 1 apk foi gerado')
+                else:
+                    sg.Print('Nenhum apk foi gerado.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
@@ -367,14 +453,18 @@ class geradorDeApps:
                 self.util.mudaXml(getnetConfig, 'widget', 'android-versionCode', self.util.tiraPontoNmr(self.version))
                 self.util.mudaXml(getnetConfig, 'widget', 'id', self.packageName)
                 self.util.mudaXml(getnetConfig, 'widget', 'version', self.version)
-                sb.call([getnetScriptBat])
+                sb.call([r'C:\Workspace\buildapk\Scripts'])
+                if self.util.verifyFile(getnetAPK) and self.util.verifyFile(getnetAPKd):
+                    # gera mensagem ao final do build
+                    self.util.generatedMessage('getnet')
+                elif self.util.verifyFile(getnetAPK) or self.util.verifyFile(getnetAPKd):
+                    sg.Print('Apenas 1 apk foi gerado')
+                else:
+                    sg.Print('Nenhum apk foi gerado.')
             except Exception as e:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
-
-        #gera mensagem ao final do build
-        self.util.generatedMessage(self.cieloLio, self.cieloLio_teste, self.gpos700Sitef, self.gpos700Rede, self.gpos700Rede_giraffas,
-                                   self.gpos700Rede_react_saas, self.playStore, self.pagseguro, self.getnet)
+        ###
     #geraApp
 #class geradorDeApps
 
@@ -399,7 +489,7 @@ class TelaPython:
             [sg.Checkbox('Gpos 700 - Rede (React - Utilizado no SAAS - odhenpos.teknisa.cloud)', default=False, key='gpos700Rede_react_saas')],
             [sg.Checkbox('Play Store', default=False, key='playStore')],
             [sg.Checkbox('PagSeguro', default=False, key='pagseguro')],
-            [sg.Checkbox('Getnet', default=False, key='getnet')],
+            #[sg.Checkbox('Getnet', default=False, key='getnet')],
             [sg.Text('', size=(60, 1))],
             [sg.Text('Nome do pacote: ', size=(10, 0)),
              sg.Input(size=(30, 0), key='packageName')],
@@ -423,7 +513,8 @@ class TelaPython:
                 gpos700Rede_react_saas = self.values['gpos700Rede_react_saas']
                 playStore = self.values['playStore']
                 pagseguro = self.values['pagseguro']
-                getnet = self.values['getnet']
+                #getnet = self.values['getnet']
+                getnet = False
                 packageName = self.values['packageName']
                 version = self.values['version']
                 mobileFolderPath = self.values['mobileFolderPath']
