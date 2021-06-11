@@ -1,5 +1,6 @@
 #IMPORTA DEPENDENCIAS NECESSARIAS
 import os
+from os.path import expanduser
 from os.path import exists
 import subprocess as sb
 import json
@@ -53,6 +54,8 @@ cieloPropDir = 'Projetos Build/LIO/odhenPOS/'
 cieloScriptBat = ROOT_DIR + r'/Scripts/buildlio.bat'
 cieloAPK = 'Aplicativos/lio/'
 
+dependenciesDir = 'dependencias/'
+
 #diretorios build e copia
 prodDir = 'projeto/'
 prodDirOdhen = 'projeto/odhenPOS/'
@@ -91,11 +94,11 @@ class Util:
         try:
             shutil.rmtree(path)
         except Exception as e:
-            sg.popup_error(f'DELETE DIR ERROR!   ', e)
+            sg.popup_ok(f'DELETE DIR ERROR!   ', e)
     #deleteDir
 
     def createDir(self, path, permission):
-        sg.Print('Diretorio ', path, f' criado!{os.linesep}')
+        sg.popup_ok('Diretorio ', path, f' criado!{os.linesep}')
         try:
             os.mkdir(path, mode=permission)
         except Exception as e:
@@ -121,6 +124,14 @@ class Util:
         nmr = int(strN)
         return nmr
     #tiraPontoNmr
+
+    #troca contra-barra por barra e barras duplas por barras
+    def trocaBarra(self, txt):
+        aux = str(txt).replace('\\', '/')
+        if '//' in aux:
+            aux = str(aux).replace('//', '/')
+        return aux
+    #trocaBarra
 
     #abre json e coloca as informaçoes em variavel
     def retornaJson(self, dataJson):
@@ -215,14 +226,14 @@ class Util:
               f'ext.set("KEY_PASSWORD", "teknisa"){os.linesep}'
         try:
             # trata ".properties"
-            auxPath = cieloPropDir + 'build.txt'
+            auxPath = dependenciesDir + 'build.txt'
             if exists(auxPath):
                 os.remove(auxPath)
             #cria txt
             self.createTXTFile(auxPath, content)
-            if exists(cieloPropDir + 'build.properties'):
+            if exists(dependenciesDir + 'build.properties'):
                 #deleta arquivo
-                os.remove(cieloPropDir + 'build.properties')
+                os.remove(dependenciesDir + 'build.properties')
             p = Path(auxPath)
             #renomeia através da lib Path
             p.rename(p.with_suffix('.properties'))
@@ -230,6 +241,77 @@ class Util:
             self.getBatLog(e)
             sg.popup_error('treatDotProperties ERROR: ', e)
     #treatDotProperties
+
+    # cria ".txt", deleta ".properties" e altera para ".txt" para ""
+    def treatGradle(self, param):
+        ip = '192.168.122.121'
+        port = '3128'
+        if param:
+            # conteudo a ser posto no arquivo ".properties"
+            content = f'# Project-wide Gradle settings.{os.linesep}{os.linesep}' \
+                        f'# IDE (e.g. Android Studio) users:' \
+                        f'# Gradle settings configured through the IDE *will override*{os.linesep}' \
+                        f'# any settings specified in this file.{os.linesep}{os.linesep}' \
+                        f'# For more details on how to configure your build environment visit{os.linesep}' \
+                        f'# http://www.gradle.org/docs/current/userguide/build_environment.html{os.linesep}{os.linesep}' \
+                        f'# The setting is particularly useful for tweaking memory settings.{os.linesep}' \
+                        f'# Default value: -Xmx10248m -XX:MaxPermSize=256m{os.linesep}' \
+                        f'# org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8{os.linesep}{os.linesep}' \
+                        f'# When configured, Gradle will run in incubating parallel mode.{os.linesep}' \
+                        f'# This option should only be used with decoupled projects. More details, visit{os.linesep}' \
+                        f'# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects{os.linesep}' \
+                        f'# org.gradle.parallel=true{os.linesep}' \
+                        f'systemProp.http.proxyHost={ip}{os.linesep}' \
+                        f'systemProp.http.proxyPort={port}{os.linesep}' \
+                        f'systemProp.http.proxyUser={os.linesep}' \
+                        f'systemProp.http.proxyPassword={os.linesep}' \
+                        f'systemProp.http.proxyHost={ip}{os.linesep}' \
+                        f'systemProp.http.proxyPort={port}{os.linesep}' \
+                        f'systemProp.http.proxyUser={os.linesep}' \
+                        f'systemProp.http.proxyPassword={os.linesep}{os.linesep}' \
+                        f'org.gradle.parallel=true{os.linesep}' \
+                        f'org.gradle.daemon=true'
+        else:
+            content = f'# Project-wide Gradle settings.{os.linesep}{os.linesep}' \
+                      f'# IDE (e.g. Android Studio) users:' \
+                      f'# Gradle settings configured through the IDE *will override*{os.linesep}' \
+                      f'# any settings specified in this file.{os.linesep}{os.linesep}' \
+                      f'# For more details on how to configure your build environment visit{os.linesep}' \
+                      f'# http://www.gradle.org/docs/current/userguide/build_environment.html{os.linesep}{os.linesep}' \
+                      f'# The setting is particularly useful for tweaking memory settings.{os.linesep}' \
+                      f'# Default value: -Xmx10248m -XX:MaxPermSize=256m{os.linesep}' \
+                      f'# org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8{os.linesep}{os.linesep}' \
+                      f'# When configured, Gradle will run in incubating parallel mode.{os.linesep}' \
+                      f'# This option should only be used with decoupled projects. More details, visit{os.linesep}' \
+                      f'# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects{os.linesep}' \
+                      f'# org.gradle.parallel=true{os.linesep}' \
+                      f'systemProp.http.proxyHost={os.linesep}' \
+                      f'systemProp.http.proxyPort={os.linesep}' \
+                      f'systemProp.http.proxyUser={os.linesep}' \
+                      f'systemProp.http.proxyPassword={os.linesep}' \
+                      f'systemProp.http.proxyHost={os.linesep}' \
+                      f'systemProp.http.proxyPort={os.linesep}' \
+                      f'systemProp.http.proxyUser={os.linesep}' \
+                      f'systemProp.http.proxyPassword={os.linesep}{os.linesep}' \
+                      f'org.gradle.parallel=true{os.linesep}' \
+                      f'org.gradle.daemon=true'
+        try:
+            # trata ".properties"
+            auxPath = dependenciesDir + 'gradle.txt'
+            if exists(auxPath):
+                os.remove(auxPath)
+            # cria txt
+            self.createTXTFile(auxPath, content)
+            if exists(dependenciesDir + 'gradle.properties'):
+                # deleta arquivo
+                os.remove(dependenciesDir + 'gradle.properties')
+            p = Path(auxPath)
+            # renomeia através da lib Path
+            p.rename(p.with_suffix('.properties'))
+        except Exception as e:
+            self.getBatLog(e)
+            sg.popup_error('treatGradle ERROR: ', e)
+    # treatDotProperties
 
     #verifica se o arquivo existe
     def verifyFile(self, path):
@@ -244,20 +326,21 @@ class Util:
 
 class geradorDeApps:
     def __init__(self, cieloLio, cieloLio_teste, gpos700Sitef, gpos700Rede, gpos700Rede_giraffas, gpos700Rede_react_saas, playStore,
-                 pagseguro, getnet, packageName, version, mobileFolderPath):
-        self.util = Util()
-        self.cieloLio = cieloLio
-        self.cieloLio_teste = cieloLio_teste
-        self.gpos700Sitef = gpos700Sitef
-        self.gpos700Rede = gpos700Rede
-        self.gpos700Rede_giraffas = gpos700Rede_giraffas
-        self.gpos700Rede_react_saas = gpos700Rede_react_saas
-        self.playStore = playStore
-        self.pagseguro = pagseguro
-        self.getnet = getnet
-        self.packageName = packageName
-        self.version = version
-        self.mobileFolderPath = mobileFolderPath + '/'
+                 pagseguro, getnet, packageName, version, mobileFolderPath, activeProxy):
+        self.util                      = Util()
+        self.cieloLio                  = cieloLio
+        self.cieloLio_teste            = cieloLio_teste
+        self.gpos700Sitef              = gpos700Sitef
+        self.gpos700Rede               = gpos700Rede
+        self.gpos700Rede_giraffas      = gpos700Rede_giraffas
+        self.gpos700Rede_react_saas    = gpos700Rede_react_saas
+        self.playStore                 = playStore
+        self.pagseguro                 = pagseguro
+        self.getnet                    = getnet
+        self.packageName               = packageName
+        self.version                   = version
+        self.mobileFolderPath          = mobileFolderPath + '/'
+        self.activeProxy               = activeProxy
 
         self.geraApp()
     #__init__
@@ -271,13 +354,56 @@ class geradorDeApps:
             self.util.deleteDir(prodDir)
             self.util.createDir(prodDir, 0o777)
 
+        #valida se usa proxy
+        if self.activeProxy and (self.cieloLio or self.cieloLio_teste):
+            self.util.treatGradle(True)
+        else:
+            self.util.treatGradle(False)
+
+        #cria vars para verificação
+        #pega user_dir
+        user_dir = expanduser("~")
+
+        #pega variaveis de ambiente
+        java_home = os.getenv("JAVA_HOME")
+        android_home = os.getenv("ANDROID_HOME")
+        android_sdk_root = os.getenv("ANDROID_SDK_ROOT")
+
+        #verifica se a variavel de ambiente JAVA_HOME esta setada e instalada
+        if not java_home and os.path.isdir('C:\Program Files\Java') \
+                and not self.util.dirIsEmpty('C:\Program Files\Java'):
+            sg.PopupOK('Setando JAVA_HOME provisória...')
+            os.environ["JAVA_HOME"] = "C:\Program Files\Java\\"+[0]
+        elif not os.path.isdir('C:\Program Files\Java'):
+            sg.PopupError(f'{os.linesep}{os.linesep}'
+                          f'Necessário instalar JDK! Link: https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html'
+                          f'{os.linesep}{os.linesep}')
+
+        #faz a verificacao com o ANDROID_HOME
+        if not android_home and os.path.isdir(user_dir+'\AppData\Local\Android\Sdk') \
+                and not self.util.dirIsEmpty(user_dir+'\AppData\Local\Android\Sdk'):
+            sg.PopupOK('Setando ANDROID_HOME e ANDROID_SDK_ROOT provisória...')
+            os.environ["ANDROID_HOME"] = user_dir+'\AppData\Local\Android\Sdk'
+            os.environ["ANDROID_SDK_ROOT"] = user_dir + '\AppData\Local\Android\Sdk'
+        elif not os.path.isdir(user_dir+'\AppData\Local\Android\Sdk'):
+            sg.PopupError(f'{os.linesep}{os.linesep}'
+                          f'Necessário instalar Android SDK!'
+                          f'{os.linesep}{os.linesep}')
+
+        #verifica se a build-tools necessária existe
+        if os.path.isdir(android_sdk_root+'\\build-tools\\22.0.1') \
+                and not self.util.dirIsEmpty(android_sdk_root):
+            #shutil.copytree(dependenciesDir+"/22.0.1", android_sdk_root+"/build-tools"")
+            sb.call([f'Xcopy /E {dependenciesDir+"/22.0.1"} {android_sdk_root+"/build-tools"} '])
+
         #completa diretorio
         auxPath = prodDirOdhen + 'mobile/'
         self.util.deleteDir(prodDir)
         try:
             sg.Print(f'Copiando. Aguarde...')
             #copia arquivos de "self.mobileFolderPath" para "auxPath"
-            shutil.copytree(self.mobileFolderPath, auxPath)
+            #shutil.copytree(self.mobileFolderPath, auxPath)
+            sb.call([f'Xcopy /E {self.mobileFolderPath} {auxPath} '])
         except Exception as e:
             self.util.getBatLog(e)
             sg.popup_error('Erro na etapa de copiar diretório: ', e)
@@ -465,6 +591,7 @@ class geradorDeApps:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
         ###
+        sb.call(['%windir%\system32\\rundll32.exe advapi32.dll,ProcessIdleTasks'])
     #geraApp
 #class geradorDeApps
 
@@ -475,6 +602,8 @@ class TelaPython:
         layout = [
             #CRIA ELEMENTO NA TELA COM UM INPUT PARA RECEBER DADOS
             [sg.Submit('Help', size=(3, 0), key='help')],
+            [sg.Text('', size=(60, 1))],
+            [sg.Checkbox('Ativar proxy', default=False, key='activeProxy')],
             [sg.Text('', size=(60, 1))],
             [sg.Text('Selecione o diretório "mobile/": '),
              sg.InputText('caminho...', size=(40, 5), key='mobileFolderPath'),
@@ -505,19 +634,20 @@ class TelaPython:
             while True:
                 # EXTRAIR DADOS DA TELA
                 self.event, self.values = self.janela.Read()
-                cieloLio = self.values['cieloLio']
-                cieloLio_teste = self.values['cieloLio_teste']
-                gpos700Sitef = self.values['gpos700Sitef']
-                gpos700Rede = self.values['gpos700Rede']
-                gpos700Rede_giraffas = self.values['gpos700Rede_giraffas']
-                gpos700Rede_react_saas = self.values['gpos700Rede_react_saas']
-                playStore = self.values['playStore']
-                pagseguro = self.values['pagseguro']
-                #getnet = self.values['getnet']
-                getnet = False
-                packageName = self.values['packageName']
-                version = self.values['version']
-                mobileFolderPath = self.values['mobileFolderPath']
+                activeProxy               = self.values['activeProxy']
+                cieloLio                  = self.values['cieloLio']
+                cieloLio_teste            = self.values['cieloLio_teste']
+                gpos700Sitef              = self.values['gpos700Sitef']
+                gpos700Rede               = self.values['gpos700Rede']
+                gpos700Rede_giraffas      = self.values['gpos700Rede_giraffas']
+                gpos700Rede_react_saas    = self.values['gpos700Rede_react_saas']
+                playStore                 = self.values['playStore']
+                pagseguro                 = self.values['pagseguro']
+                #getnet                    = self.values['getnet']
+                getnet                    = False
+                packageName               = self.values['packageName']
+                version                   = self.values['version']
+                mobileFolderPath          = self.values['mobileFolderPath']
                 #valida qual botao foi pressionado
                 if self.event == 'generateAppBtn':
                     #verifica se algum projeto foi selecionado e se a versão foi digitada
@@ -534,7 +664,9 @@ class TelaPython:
                         else:
                             #chama gerador com as opções passadas da tela
                             #gera o apk
-                            gerador = geradorDeApps(cieloLio, cieloLio_teste, gpos700Sitef, gpos700Rede, gpos700Rede_giraffas, gpos700Rede_react_saas, playStore, pagseguro, getnet, packageName, version, mobileFolderPath)
+                            gerador = geradorDeApps(cieloLio, cieloLio_teste, gpos700Sitef, gpos700Rede, gpos700Rede_giraffas,
+                                                    gpos700Rede_react_saas, playStore, pagseguro, getnet, packageName, version,
+                                                    mobileFolderPath, activeProxy)
                     else:
                         sg.popup_error(f'Algumas opções ou campos não foram preenchidos!')
                 elif self.event == 'help':

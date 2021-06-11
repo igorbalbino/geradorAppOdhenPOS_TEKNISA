@@ -1,16 +1,24 @@
-# This is a sample Python script.
+import os
+from os.path import expanduser
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+user_dir = expanduser("~")
+
+java_home = os.getenv("JAVA_HOME")
+android_home = os.getenv("ANDROID_HOME")
+android_sdk_root = os.getenv("ANDROID_SDK_ROOT")
+print(f'{user_dir}{os.linesep}{java_home}{os.linesep}{android_home}{os.linesep}{android_sdk_root}')
+
+os.environ["DEBUSSY"] = "1"
+
+if java_home:
+    print('certo')
+else:
+    print('errado')
+
+print(os.getenv("DEBUSSY"))
+def criaEnvVar(txt, path):
+    print('a')
+
+#
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
