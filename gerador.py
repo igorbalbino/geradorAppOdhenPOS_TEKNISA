@@ -322,6 +322,24 @@ class Util:
         else:
             return 'Aconteceu um erro aqui! func: verifyFile'
     #verifyFile
+
+    def countAndConcatenateListDir(self, path):
+        try:
+            path = Path(path)
+            dirItens = os.listdir(path)
+            n = 0
+            for item in dirItens:
+                n = n + 1
+            sg.popup_ok(f'Temos "{n}" adquivos e/ou diretorios em {path}.{os.linesep} '
+                     f'O de index "0" será usado para o build atual. Caso não funcione, '
+                     f'configure a váriavel de ambiente manualmente. {os.linesep}')
+            returnItem = os.path.join("C:\Program Files\Java\\", dirItens[0])
+            return returnItem
+        except Exception as e:
+            self.getBatLog(e)
+            sg.popup_error('countAndConcatenateListDir ERROR: ', e)
+    #countAndConcatenateListDir
+
 #class Util
 
 class geradorDeApps:
@@ -373,40 +391,42 @@ class geradorDeApps:
         if not java_home and os.path.isdir('C:\Program Files\Java') \
                 and not self.util.dirIsEmpty('C:\Program Files\Java'):
             sg.PopupOK('Setando JAVA_HOME provisória...')
-            os.environ["JAVA_HOME"] = "C:\Program Files\Java\\"+[0]
+            dirItens = self.util.countAndConcatenateListDir('C:\Program Files\Java')
+            os.environ["JAVA_HOME"] = dirItens
+            java_home = os.getenv("JAVA_HOME")
         elif not os.path.isdir('C:\Program Files\Java'):
             sg.PopupError(f'{os.linesep}{os.linesep}'
                           f'Necessário instalar JDK! Link: https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html'
                           f'{os.linesep}{os.linesep}')
 
-        #faz a verificacao com o ANDROID_HOME
-        if not android_home and os.path.isdir(user_dir+'\AppData\Local\Android\Sdk') \
-                and not self.util.dirIsEmpty(user_dir+'\AppData\Local\Android\Sdk'):
+        #faz a verificacao com o ANDROID_HOME e ANDROID_SDK_ROOT
+        if not android_home and os.path.isdir(user_dir+'\\AppData\\Local\\Android\\Sdk') \
+                and not self.util.dirIsEmpty(user_dir+'\\AppData\\Local\\Android\\Sdk'):
             sg.PopupOK('Setando ANDROID_HOME e ANDROID_SDK_ROOT provisória...')
-            os.environ["ANDROID_HOME"] = user_dir+'\AppData\Local\Android\Sdk'
-            os.environ["ANDROID_SDK_ROOT"] = user_dir + '\AppData\Local\Android\Sdk'
-        elif not os.path.isdir(user_dir+'\AppData\Local\Android\Sdk'):
-            sg.PopupError(f'{os.linesep}{os.linesep}'
-                          f'Necessário instalar Android SDK!'
+            os.environ["ANDROID_HOME"]      = user_dir+'\\AppData\\Local\\Android\\Sdk'
+            os.environ["ANDROID_SDK_ROOT"]  = user_dir + '\\AppData\\Local\\Android\\Sdk'
+            android_home = os.getenv("ANDROID_HOME")
+            android_sdk_root = os.getenv("ANDROID_SDK_ROOT")
+        elif not os.path.isdir(user_dir+'\\AppData\\Local\\Android\\Sdk'):
+            sg.PopupError(f'{os.linesep}{os.linesep}' \
+                          f'Necessário instalar Android SDK!' \
                           f'{os.linesep}{os.linesep}')
 
         #verifica se a build-tools necessária existe
-        if os.path.isdir(android_sdk_root+'\\build-tools\\22.0.1') \
-                and not self.util.dirIsEmpty(android_sdk_root):
-            #shutil.copytree(dependenciesDir+"/22.0.1", android_sdk_root+"/build-tools"")
-            sb.call([f'Xcopy /E {dependenciesDir+"/22.0.1"} {android_sdk_root+"/build-tools"} '])
+        if not os.path.isdir(str(android_home)+'\\build-tools\\22.0.1'):
+            sg.PopupOK('Copiando 22.0.1/. Aguarde...')
+            shutil.copytree(dependenciesDir+"/22.0.1", str(android_home)+'\\build-tools')
 
         #completa diretorio
         auxPath = prodDirOdhen + 'mobile/'
         self.util.deleteDir(prodDir)
+        sg.PopupOK(f'Copiando mobile. Aguarde...')
         try:
-            sg.Print(f'Copiando. Aguarde...')
             #copia arquivos de "self.mobileFolderPath" para "auxPath"
-            #shutil.copytree(self.mobileFolderPath, auxPath)
-            sb.call([f'Xcopy /E {self.mobileFolderPath} {auxPath} '])
+            shutil.copytree(self.mobileFolderPath, auxPath)
         except Exception as e:
             self.util.getBatLog(e)
-            sg.popup_error('Erro na etapa de copiar diretório: ', e)
+            sg.popup_error('Copiar mobile/ ERROR: ', e)
 
         #valida quais projetos devem ser gerados e chama ".bat"
         ###
@@ -591,7 +611,6 @@ class geradorDeApps:
                 self.util.getBatLog(e)
                 sg.popup_error('GENERATE PLAYSTORE APP ERROR!   ', e)
         ###
-        sb.call(['%windir%\system32\\rundll32.exe advapi32.dll,ProcessIdleTasks'])
     #geraApp
 #class geradorDeApps
 
@@ -617,7 +636,7 @@ class TelaPython:
             [sg.Checkbox('Gpos 700 - Rede (OdhenPOS Beta - Utilizado no Giraffas, Produção, etc.)', default=False, key='gpos700Rede_giraffas')],
             [sg.Checkbox('Gpos 700 - Rede (React - Utilizado no SAAS - odhenpos.teknisa.cloud)', default=False, key='gpos700Rede_react_saas')],
             [sg.Checkbox('Play Store', default=False, key='playStore')],
-            [sg.Checkbox('PagSeguro', default=False, key='pagseguro')],
+            #[sg.Checkbox('PagSeguro', default=False, key='pagseguro')],
             #[sg.Checkbox('Getnet', default=False, key='getnet')],
             [sg.Text('', size=(60, 1))],
             [sg.Text('Nome do pacote: ', size=(10, 0)),
@@ -642,7 +661,8 @@ class TelaPython:
                 gpos700Rede_giraffas      = self.values['gpos700Rede_giraffas']
                 gpos700Rede_react_saas    = self.values['gpos700Rede_react_saas']
                 playStore                 = self.values['playStore']
-                pagseguro                 = self.values['pagseguro']
+                #pagseguro                 = self.values['pagseguro']
+                pagseguro                 = False
                 #getnet                    = self.values['getnet']
                 getnet                    = False
                 packageName               = self.values['packageName']
